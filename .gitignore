@@ -1,0 +1,9 @@
+
+/supervisor_docker/frontEnd/*
+/supervisor_docker/JAR_files/*
+
+*.jar
+/with_dockercompose/JAR_files/*
+/with_dockercompose/frontEnd_img/frent/*
+
+

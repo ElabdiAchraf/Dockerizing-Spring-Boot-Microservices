@@ -1,0 +1,190 @@
+#----------------- EL ABDI Achraf && AMMOR Yazid && Meskini Mohamed saad ----------------------
+version: "3.8"
+
+
+services:
+  eureka:
+    image: eureka_service
+    networks:
+      - microservices
+    build: eureka_img/
+    ports:
+      - "8761:8761"
+
+
+  gateway:
+    image: gate_img
+    build: gateway_img/
+    networks:
+      - microservices
+    ports:
+      - "9999:9999"
+    depends_on:
+      - eureka
+    environment:
+      - JAVA_OPTS=
+        -DEUREKA_SERVER=http://eureka:8761/eureka
+  
+  db:
+      image: mysql_img
+      build: mysql_img
+      restart: on-failure
+      networks:
+        - microservices
+      container_name: sql7
+      ports:
+        - 3306:3306
+      environment:
+        - MYSQL_ALLOW_EMPTY_PASSWORD=achraf
+
+    
+  auth:
+    image: auth_img3
+    build: auth_img/
+    restart: on-failure
+    networks:
+      - microservices
+    depends_on:
+      - eureka
+      - db
+    ports:
+      - "9902:9902"
+    environment:
+      - JAVA_OPTS=
+        -DDISCOVERY=http://eureka:8761/eureka
+        -DMYSQL_HOST=db
+    entrypoint: ["./wait.sh"]
+  
+
+
+  mongodb:
+    container_name: mongo-db-smart-contract1
+    image: mongo_img
+    build: mongo_img/
+    networks:
+      - microservices
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./data:/data/db1
+    entrypoint: ["mongod"]
+
+  file:
+    image: file_img
+    build: file_img/
+    restart: on-failure
+    networks:
+      - microservices
+    depends_on:
+      - eureka
+      - mongodb
+    ports:
+      - "9904:9904"
+    environment:
+      - JAVA_OPTS=
+        -DDISCOVERY=http://eureka:8761/eureka
+        -DMONGODB_PORT=27017
+        -DMONGODB_AUTH=admin
+        -DMONGODB_USERNAME=admin
+        -DMONGODB_PASSWORD=pass
+        -DMONGODB_HOST=mongodb
+    entrypoint: ["./wait.sh"]
+  
+  immo_smart_contract:
+    image: immobilier_img
+    build: immobilier_img/
+    restart: on-failure
+    networks:
+      - microservices
+    depends_on:
+      - eureka
+      - mongodb
+    ports:
+      - "9901:9901"
+    environment:
+      - JAVA_OPTS=
+        -DDISCOVERY=http://eureka:8761/eureka
+        -DMONGODB_PORT=27017
+        -DMONGODB_AUTH=admin
+        -DMONGODB_USERNAME=admin
+        -DMONGODB_PASSWORD=pass
+        -DMONGODB_HOST=mongodb
+        -DSM_PRIVATE_KEY=dc56417ae7de55a9f33e15394f0515f8b128d5d619c76256f6e51fe1fa7c5279
+        -DSM_CONTRACT_ADDRESS=0xa720e128577931e085cae9177599060afec5f979
+        -DGANACHE_PORT=
+    entrypoint: ["./wait.sh"]
+
+  pay_smart_contract:
+    image: payment_img
+    build: payment_img
+    restart: on-failure
+    networks:
+      - microservices
+    depends_on:
+      - eureka
+      - mongodb
+    ports:
+      - "9901:9901"
+    environment:
+      - JAVA_OPTS=
+        -DDISCOVERY=http://eureka:8761/eureka
+        -DMONGODB_PORT=27017
+        -DMONGODB_AUTH=admin
+        -DMONGODB_USERNAME=admin
+        -DMONGODB_PASSWORD=pass
+        -DMONGODB_HOST=mongodb
+        -DSM_PRIVATE_KEY=dc56417ae7de55a9f33e15394f0515f8b128d5d619c76256f6e51fe1fa7c5279
+        -DSM_CONTRACT_ADDRESS=0xa720e128577931e085cae9177599060afec5f979
+        -DGANACHE_PORT=
+    entrypoint: ["./wait.sh"]
+
+  order:
+    image: order_img
+    build: order_img/
+    restart: on-failure
+    networks:
+      - microservices
+    depends_on:
+      - eureka
+      - mongodb
+    ports:
+      - "9905:9905"
+    environment:
+      - JAVA_OPTS=
+        -DDISCOVERY=http://eureka:8761/eureka
+        -DMONGODB_PORT=27017
+        -DMONGODB_AUTH=admin
+        -DMONGODB_USERNAME=admin
+        -DMONGODB_PASSWORD=pass
+        -DMONGODB_HOST=mongodb
+    entrypoint: ["./wait.sh"]
+
+  front:
+    image: frontEnd_img
+    build: frontEnd_img/
+    restart: on-failure
+    networks:
+      - microservices
+    depends_on:
+      - eureka
+      - mongodb
+    ports:
+      - "80:80"
+      - "8000:8000"
+    environment:
+      - HOST=gateway
+    entrypoint: ["./wait.sh"]
+
+networks:
+  microservices:
+    driver: bridge
+  
+
+
+
+
+
+    
+  
+ 
+   
